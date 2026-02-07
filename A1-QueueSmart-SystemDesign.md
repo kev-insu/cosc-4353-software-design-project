@@ -1,4 +1,4 @@
-[ds assignment1 graph2.drawio](https://github.com/user-attachments/files/25142189/ds.assignment1.graph2.drawio)TableLine (QueueSmart) – Smart Queue Management Web Application 
+TableLine (QueueSmart) – Smart Queue Management Web Application 
 Assignment 1: Initial Thoughts and System Design (A1)
 Project Focus: Restaurant Waitlist + Table Management
 
