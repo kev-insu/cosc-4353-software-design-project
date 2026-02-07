@@ -106,3 +106,4 @@ Team Contributions (IMPORTANT)
 - Ishita Uddarraju |  Led the initial system design and documentation by drafting the Initial Thoughts, Development Methodology, and High-Level Architecture sections. Answered all required assignment questions after discussing design decisions with the team. | No notes.
 - Chan-Vu Nguyen | Wrote and added the High-Level Architecture section (Part 3) and committed updates to the system design document on GitHub. | No notes. |
 - Huxley Taganahan | Created the system context diagram and reorganized the document | No notes. |
+- Kevin Su | Created the github and assisted on the diagram | No notes. |
