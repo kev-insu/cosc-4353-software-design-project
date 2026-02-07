@@ -19,74 +19,74 @@ Guest (User)
 
 Administrator (Host / Manager)
 
-Creates and manages services (seating types)
+- Creates and manages services (seating types)
 
-Monitors the active waitlist and table flow
+- Monitors the active waitlist and table flow
 
-Adjusts priorities and handles no-shows
+- Adjusts priorities and handles no-shows
 
-Views basic usage statistics (busy hours, average wait time)
+- Views basic usage statistics (busy hours, average wait time)
 
 How will users and administrators interact with the application?
 
 Guest experience (web app)
-Guests use the TableLine web app on their phone (or a QR code at the host stand). After logging in, they choose a service (ex: “Standard Seating” or “Large Party 6+”), enter party size, and join the waitlist. They then see their position and estimated wait. They receive a notification when they’re getting close, and their status updates as the host moves the line forward.
+- Guests use the TableLine web app on their phone (or a QR code at the host stand). After logging in, they choose a service (ex: “Standard Seating” or “Large Party 6+”), enter party size, and join the waitlist. They then see their position and estimated wait. They receive a notification when they’re getting close, and their status updates as the host moves the line forward.
 
 Admin experience (web app)
-Admins use a web dashboard (host stand tablet/laptop). They create services, set expected service duration, and assign default priorities. From a live queue dashboard, they can mark parties as seated, remove no-shows, change priority, and pause the queue if the restaurant is overwhelmed. They can also view basic stats to understand patterns and improve staffing decisions.
+- Admins use a web dashboard (host stand tablet/laptop). They create services, set expected service duration, and assign default priorities. From a live queue dashboard, they can mark parties as seated, remove no-shows, change priority, and pause the queue if the restaurant is overwhelmed. They can also view basic stats to understand patterns and improve staffing decisions.
 
 What are the most important features?
 
 For a useful first version, the most important features are:
 
-Login + registration (guests and admins)
+- Login + registration (guests and admins)
 
-User roles (guest vs admin permissions)
+- User roles (guest vs admin permissions)
 
-Service management (admin creates seating services with duration + priority)
+- Service management (admin creates seating services with duration + priority)
 
-Queue actions (guest can join/leave; admin can manage queue)
+- Queue actions (guest can join/leave; admin can manage queue)
 
-Queue status (position + estimated wait time)
+- Queue status (position + estimated wait time)
 
-Notifications (in-app and/or email)
+- Notifications (in-app and/or email)
 
-History (guest history + admin usage stats)
+- History (guest history + admin usage stats)
 
 What challenges do you anticipate?
 
-Wait time accuracy: Restaurants don’t have consistent service times. Wait time depends on table turnover, party size, and no-shows, so estimates need to update often.
+- Wait time accuracy: Restaurants don’t have consistent service times. Wait time depends on table turnover, party size, and no-shows, so estimates need to update often.
 
-Notification timing: If we notify too early, guests get annoyed. Too late, they miss their turn. We need a simple a way where that is more accurate.
+- Notification timing: If we notify too early, guests get annoyed. Too late, they miss their turn. We need a simple a way where that is more accurate.
 
-Fairness vs priority: Sometimes a host needs to prioritize (accessibility needs, VIP, etc.). The system should support priority without making the queue feel random.
+- Fairness vs priority: Sometimes a host needs to prioritize (accessibility needs, VIP, etc.). The system should support priority without making the queue feel random.
 
-Real-time updates: Queue changes should update quickly on both guest and admin screens.
+- Real-time updates: Queue changes should update quickly on both guest and admin screens.
 
-No-shows: If a guest doesn’t respond, the system needs a “grace period” and an easy way to remove them.
+- No-shows: If a guest doesn’t respond, the system needs a “grace period” and an easy way to remove them.
 
 2. Development Methodology
 Which methodology will you follow?
 
-We plan to use an Agile approach (Scrum-style iterations).
+- We plan to use an Agile approach (Scrum-style iterations).
 
 Why is this methodology appropriate?
 
-Agile fits because this project has a lot of moving parts (guest flow, admin tools, notifications, wait time rules), and our understanding will improve as we design UI (A2), define APIs (A3), and create the data model (A4). Agile lets us build in steps and adjust as we go, instead of locking everything upfront.
+- Agile fits because this project has a lot of moving parts (guest flow, admin tools, notifications, wait time rules), and our understanding will improve as we design UI (A2), define APIs (A3), and create the data model (A4). Agile lets us build in steps and adjust as we go, instead of locking everything upfront.
 
 How will this approach help across multiple assignments?
 
 Each assignment naturally becomes a “checkpoint” that builds on the last one:
 
-A1: overall design and architecture (this doc)
+- A1: overall design and architecture (this doc)
 
-A2: web UI pages and flows (guest + admin)
+- A2: web UI pages and flows (guest + admin)
 
-A3: API design (how the UI talks to the backend)
+- A3: API design (how the UI talks to the backend)
 
-A4: database design (users, services, queue entries, history)
+- A4: database design (users, services, queue entries, history)
 
-Final: working system + demo
+- Final: working system + demo
 
 3. High-Level Design / Architecture
 
