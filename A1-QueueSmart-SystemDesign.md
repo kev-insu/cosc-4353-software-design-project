@@ -1,4 +1,4 @@
-TableLine (QueueSmart) – Smart Queue Management Web Application #I just did QueueSmart and kept it like the assignment TableLine is an optional name you guys change it as you please but temp.
+TableLine (QueueSmart) – Smart Queue Management Web Application 
 Assignment 1: Initial Thoughts and System Design (A1)
 Project Focus: Restaurant Waitlist + Table Management
 
@@ -9,13 +9,13 @@ Who are the main users of the system?
 
 Guest (User)
 
-Joins a restaurant waitlist
+- Joins a restaurant waitlist
 
-Tracks their position and estimated wait time
+- Tracks their position and estimated wait time
 
-Receives notifications when they’re close to being seated
+- Receives notifications when they’re close to being seated
 
-Views their waitlist history
+- Views their waitlist history
 
 Administrator (Host / Manager)
 
