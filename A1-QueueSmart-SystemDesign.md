@@ -88,6 +88,14 @@ A4: database design (users, services, queue entries, history)
 
 Final: working system + demo
 
+3. High-Level Design / Architecture
+
+TableLine will be designed as a web-based queue and table-management system with two main user interfaces: a guest interface and an administrator dashboard. Both interfaces interact with a centralized application server that manages authentication, queue operations, service configuration, and wait-time estimation. The system runs in real time so that changes made by administrators are immediately reflected for guests viewing their queue status.
+
+At a high level, the system consists of four main components: a web front-end, a backend application server, a database, and an external notification service. Guests use the web interface to join a waitlist, check their position, and receive updates. Administrators use a dashboard to create services, manage the queue, adjust priorities, and mark parties as seated or removed.
+
+The backend server handles login and registration, enforces user roles, processes queue actions, calculates estimated wait times, and stores history. A database stores users, services, queue entries, and usage statistics. An external notification service sends alerts when a guest’s table is close to being ready. Guests and administrators interact only with the web interface while the backend processes requests and updates the system in real time.
+
 We’ll use GitHub issues to break tasks into user stories, and commits/pull requests to show each person’s contribution.
 
 Team COntributions for A1:
