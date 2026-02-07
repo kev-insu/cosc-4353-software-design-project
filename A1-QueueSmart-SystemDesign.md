@@ -1,4 +1,4 @@
-TableLine (QueueSmart) – Smart Queue Management Web Application 
+[ds assignment1 graph2.drawio](https://github.com/user-attachments/files/25142189/ds.assignment1.graph2.drawio)TableLine (QueueSmart) – Smart Queue Management Web Application 
 Assignment 1: Initial Thoughts and System Design (A1)
 Project Focus: Restaurant Waitlist + Table Management
 
@@ -95,6 +95,65 @@ TableLine will be designed as a web-based queue and table-management system with
 At a high level, the system consists of four main components: a web front-end, a backend application server, a database, and an external notification service. Guests use the web interface to join a waitlist, check their position, and receive updates. Administrators use a dashboard to create services, manage the queue, adjust priorities, and mark parties as seated or removed.
 
 The backend server handles login and registration, enforces user roles, processes queue actions, calculates estimated wait times, and stores history. A database stores users, services, queue entries, and usage statistics. An external notification service sends alerts when a guest’s table is close to being ready. Guests and administrators interact only with the web interface while the backend processes requests and updates the system in real time.
+
+[Uploading ds assign<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:147.0) Gecko/20100101 Firefox/147.0" version="29.3.8">
+  <diagram name="Page-1" id="HFJPwGJyvzeSd0ka49w9">
+    <mxGraphModel dx="1554" dy="823" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="stsY131Qkb1uQlxCJsp2-1" parent="1" style="whiteSpace=wrap;strokeWidth=2;" value="TableLine System Boundary" vertex="1">
+          <mxGeometry height="152" width="400" x="20" y="172" as="geometry" />
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-2" parent="1" style="rounded=1;arcSize=20;strokeWidth=2" value="Guest / User" vertex="1">
+          <mxGeometry height="54" width="121" x="120" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-3" parent="1" style="rounded=1;arcSize=20;strokeWidth=2" value="Administrator / Staff" vertex="1">
+          <mxGeometry height="54" width="180" x="310" y="20" as="geometry" />
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-4" parent="1" style="rounded=1;arcSize=20;strokeWidth=2" value="TableLine System&#xa;Web &amp;amp; Mobile Interface + Backend" vertex="1">
+          <mxGeometry height="102" width="230" x="65" y="197" as="geometry" />
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-5" parent="1" style="rounded=1;arcSize=20;strokeWidth=2" value="Notification Service&#xa;Email / SMS" vertex="1">
+          <mxGeometry height="78" width="171" x="169" y="398" as="geometry" />
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-6" edge="1" parent="1" source="stsY131Qkb1uQlxCJsp2-2" style="curved=1;startArrow=none;endArrow=block;exitX=0.31;exitY=1;entryX=0.31;entryY=0;rounded=0;" target="stsY131Qkb1uQlxCJsp2-4" value="Joins waitlist, Views position">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="115" y="123" />
+              <mxPoint x="115" y="172" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-7" edge="1" parent="1" source="stsY131Qkb1uQlxCJsp2-3" style="curved=1;startArrow=none;endArrow=block;exitX=0.37;exitY=1;entryX=0.95;entryY=0;rounded=0;" target="stsY131Qkb1uQlxCJsp2-4" value="Manages services, Seats parties, Updates queue">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="335" y="123" />
+              <mxPoint x="335" y="172" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-8" edge="1" parent="1" source="stsY131Qkb1uQlxCJsp2-4" style="curved=1;startArrow=none;endArrow=block;exitX=0.5;exitY=1;entryX=0.28;entryY=0;rounded=0;" target="stsY131Qkb1uQlxCJsp2-5" value="Triggers &#39;Table Ready&#39; alerts">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="180" y="361" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="stsY131Qkb1uQlxCJsp2-9" edge="1" parent="1" source="stsY131Qkb1uQlxCJsp2-5" style="curved=1;dashed=1;dashPattern=2 3;startArrow=none;endArrow=block;exitX=1;exitY=0.2;entryX=1;entryY=0.74;rounded=0;" target="stsY131Qkb1uQlxCJsp2-2" value="Sends SMS/Email updates">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="531" y="361" />
+              <mxPoint x="531" y="123" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
+ment1 graph2.drawio…]()
+
 
 We’ll use GitHub issues to break tasks into user stories, and commits/pull requests to show each person’s contribution.
 
