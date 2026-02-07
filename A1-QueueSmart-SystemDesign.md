@@ -5,7 +5,7 @@ Project Focus: Restaurant Waitlist + Table Management
 TableLine is a web application designed for restaurants to manage walk-in waitlists and seating more smoothly. Guests can join a waitlist from their phone, track their position, and get notified when their table is almost ready. Hosts and managers can create services (like standard seating vs large parties), manage the queue in real time, and track basic wait time and usage trends.
 
 **1. Initial Thoughts
-Who are the main users of the system?
+Who are the main users of the system?**
 
 Guest (User)
 
