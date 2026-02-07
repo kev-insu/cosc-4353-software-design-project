@@ -4,7 +4,7 @@ Project Focus: Restaurant Waitlist + Table Management
 
 TableLine is a web application designed for restaurants to manage walk-in waitlists and seating more smoothly. Guests can join a waitlist from their phone, track their position, and get notified when their table is almost ready. Hosts and managers can create services (like standard seating vs large parties), manage the queue in real time, and track basic wait time and usage trends.
 
-1. Initial Thoughts
+**1. Initial Thoughts
 Who are the main users of the system?
 
 Guest (User)
@@ -65,7 +65,7 @@ What challenges do you anticipate?
 
 - No-shows: If a guest doesn’t respond, the system needs a “grace period” and an easy way to remove them.
 
-2. Development Methodology
+**2. Development Methodology**
 Which methodology will you follow?
 
 - We plan to use an Agile approach (Scrum-style iterations).
@@ -88,7 +88,7 @@ Each assignment naturally becomes a “checkpoint” that builds on the last one
 
 - Final: working system + demo
 
-3. High-Level Design / Architecture
+**3. High-Level Design / Architecture**
 
 TableLine will be designed as a web-based queue and table-management system with two main user interfaces: a guest interface and an administrator dashboard. Both interfaces interact with a centralized application server that manages authentication, queue operations, service configuration, and wait-time estimation. The system runs in real time so that changes made by administrators are immediately reflected for guests viewing their queue status.
 
@@ -102,6 +102,6 @@ Team COntributions for A1:
 Team Contributions (IMPORTANT)
 ## Team Contributions
 | Name | Contribution | Notes |
-Ishita Uddarraju |  Led the initial system design and documentation by drafting the Initial Thoughts, Development Methodology, and High-Level Architecture sections. Answered all required assignment questions after discussing design decisions with the team. | No notes.
-Chan-Vu Nguyen | Wrote and added the High-Level Architecture section (Part 3) and committed updates to the system design document on GitHub. | No notes. |
-
+- Ishita Uddarraju |  Led the initial system design and documentation by drafting the Initial Thoughts, Development Methodology, and High-Level Architecture sections. Answered all required assignment questions after discussing design decisions with the team. | No notes.
+- Chan-Vu Nguyen | Wrote and added the High-Level Architecture section (Part 3) and committed updates to the system design document on GitHub. | No notes. |
+- Huxley Taganahan | Created the system context diagram and reorganized the document | No notes. |
