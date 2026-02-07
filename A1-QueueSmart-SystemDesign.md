@@ -89,3 +89,9 @@ A4: database design (users, services, queue entries, history)
 Final: working system + demo
 
 We’ll use GitHub issues to break tasks into user stories, and commits/pull requests to show each person’s contribution.
+
+Team COntributions for A1:
+Team Contributions (IMPORTANT)
+## Team Contributions
+| Name | Contribution | Notes |
+Ishita Uddarraju |  Led the initial system design and documentation by drafting the Initial Thoughts, Development Methodology, and High-Level Architecture sections. Answered all required assignment questions after discussing design decisions with the team. | No notes.
