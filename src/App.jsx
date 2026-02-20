@@ -3,9 +3,31 @@ import { useState } from 'react';
 import { mockServices, mockUserStatus } from './mockData';
 import AdminService from './AdminService';
 import './App.css';
+import Login from "./Login";
+import Register from "./Register";
+
 
 function App() {
   const [view, setView] = useState('user'); // Toggle between 'user' and 'admin'
+  const [screen, setScreen] = useState("login"); // login | register | app
+
+  if (screen === "login") {
+  return (
+    <Login
+      onLogin={() => setScreen("app")}
+      goRegister={() => setScreen("register")}
+    />
+  );
+}
+
+if (screen === "register") {
+  return (
+    <Register
+      onRegister={() => setScreen("app")}
+      goLogin={() => setScreen("login")}
+    />
+  );
+}
 
   return (
     <div className="app-container" style={{ backgroundColor: '#000', minHeight: '100vh', color: '#fff', padding: '20px' }}>
@@ -13,6 +35,10 @@ function App() {
         <h1 style={{ color: '#a855f7' }}>TableLine</h1>
         <button onClick={() => setView(view === 'user' ? 'admin' : 'user')}>
           Switch to {view === 'user' ? 'Admin' : 'User'} View
+        </button
+          
+        <button onClick={() => setScreen("login")}>
+          Logout
         </button>
       </header>
 
