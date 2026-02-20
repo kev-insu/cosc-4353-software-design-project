@@ -42,4 +42,5 @@ Queue Management: Admin simulation of serving the next user or reordering the qu
 Name | Contribution | Notes
 
 Kevin Su | Managed the GitHub repository and project scaffolding while implementing the skeleton Administrator Service Management screen, initial but incomplete form validations and mock data integration. | No notes.
+Chan-Vu Nguyen | Implemented Login and Registration screens with full client-side validation and integrated authentication screen routing in App.jsx. | No notes.
 
