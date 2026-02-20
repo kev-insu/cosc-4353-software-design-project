@@ -1,19 +1,20 @@
 // src/mockData.js
+
+// This export matches your App.jsx import
 export const mockServices = [
   {
     id: 1,
-    name: "Standard Dining",
+    name: "Standard Seating",
     description: "Regular indoor table seating.",
     duration: 45,
     priority: "Medium",
     currentQueue: 5
-  },
-  {
-    id: 2,
-    name: "Premium Grill",
-    description: "All-you-can-eat specialized grill tables.",
-    duration: 90,
-    priority: "High",
-    currentQueue: 12
   }
 ];
+
+// ADD THIS EXPORT - this is what's causing the white screen!
+export const mockUserStatus = {
+  position: 3,
+  waitTime: "15 mins",
+  status: "Waiting"
+};

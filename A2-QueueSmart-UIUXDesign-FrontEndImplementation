@@ -1,0 +1,45 @@
+Assignment 2: UI / UX Design and Front-End Implementation
+1. GitHub Repository Link
+URL: https://github.com/kev-insu/cosc-4353-software-design-project
+
+2. Design and Development Methodology
+Our team followed the Agile methodology (Scrum-style iterations) as planned in Assignment 1. This approach proved appropriate because it allowed us to build the Guest and Administrator interfaces as separate sprints while our understanding of the UI/UX flows evolved.
+
+The methodology did not fundamentally change, but it was refined through the use of Git for version control. By using a shared repository, we were able to divide work efficiently: one team member focused on the core project scaffolding and repository management, while others developed specific Guest and Administrator components in parallel. This iterative approach allowed us to identify and resolve integration issues, such as version control conflicts and runtime errors, before the final submission.
+
+3. Front-End Technologies and Responsibilities
+Technologies and Justification
+React.js & Vite: We chose React for its component-based architecture, which made it simple to divide the "User Dashboard" and "Admin Dashboard" into independent, manageable parts. Vite was used for its fast development server and "Hot Module Replacement," allowing for real-time UI updates.
+
+CSS3: Used for styling, specifically implementing the Purple and Black theme consistent with the user's preferences.
+
+JavaScript (ES6): Used for client-side validations (e.g., email format and character limits) and managing mock data state.
+
+Responsibilities
+Kevin Su - Project Scaffolding, Git/Version Control, Admin Service Management, and Form Validations
+Ishita Uddarraju - User Dashboard and Mock Data Architecture
+Chan-Vu Nguyen - Login and Registration Screens
+Huxley Taganahan - Queue Status and History Screens
+
+4. Screenshots of Front End
+(Note: Ensure you capture and label these 7 required screenshots from your running localhost:5173 before submitting)
+
+Login / Registration: Displays the auth forms with email and password fields.
+
+User Dashboard: Overview of current queue status and active services (e.g., Standard Seating).
+
+Join Queue: Interface for selecting a service and viewing estimated wait times.
+
+Queue Status: Shows current position in queue (e.g., 3rd) and real-time status updates.
+
+Admin Dashboard: Overview of active services and queue lengths for hosts.
+
+Service Management: The form for creating/editing services (validating the 100-character name limit).
+
+Queue Management: Admin simulation of serving the next user or reordering the queue.
+
+5. Team Contribution Table
+Name | Contribution | Notes
+
+Kevin Su | Managed the GitHub repository and project scaffolding while implementing the skeleton Administrator Service Management screen, initial but incomplete form validations and mock data integration. | No notes.
+
