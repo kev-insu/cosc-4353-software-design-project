@@ -35,8 +35,8 @@ if (screen === "register") {
         <h1 style={{ color: '#a855f7' }}>TableLine</h1>
         <button onClick={() => setView(view === 'user' ? 'admin' : 'user')}>
           Switch to {view === 'user' ? 'Admin' : 'User'} View
-        </button
-          
+        </button>
+
         <button onClick={() => setScreen("login")}>
           Logout
         </button>
