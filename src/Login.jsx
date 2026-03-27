@@ -24,10 +24,28 @@ export default function Login({ onLogin, goRegister }) {
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e) {
+async function handleSubmit(e) {
     e.preventDefault();
     if (validate()) {
-      onLogin(email); // mock login
+      try {
+        const response = await fetch("http://localhost:3000/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+        
+        const data = await response.json();
+
+        if (data.success) {
+          // Pass the email and the role back up to App.jsx
+          onLogin(data.email, data.role); 
+        } else {
+          setErrors({ email: data.error });
+        }
+      } catch (err) {
+        console.error("Login failed:", err);
+        setErrors({ email: "Server error. Is the backend running?" });
+      }
     }
   }
 

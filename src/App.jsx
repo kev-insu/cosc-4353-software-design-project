@@ -1,6 +1,6 @@
 // src/App.jsx
-import { useMemo, useState } from "react";
-import { mockServices, mockUserStatus } from "./mockData";
+import { useMemo, useState, useEffect } from "react";
+
 import AdminService from "./AdminService";
 import "./App.css";
 import Login from "./Login";
@@ -19,15 +19,27 @@ function App() {
   // Mini navigation for user screens
   const [userScreen, setUserScreen] = useState("dashboard"); // dashboard | join | status | history
 
-  const services = useMemo(() => mockServices ?? [], []);
+  const [services, setServices] = useState([]);
+
+// This hooks up to your GET /api/services endpoint
+useEffect(() => {
+  fetch("http://localhost:3000/api/services")
+    .then((res) => res.json())
+    .then((data) => {
+      if (data.success) {
+        setServices(data.data);
+      }
+    })
+    .catch((err) => console.error("Error fetching services:", err));
+}, []);
 
   // Shared user "mock backend" state
   const [selectedServiceId, setSelectedServiceId] = useState(null);
   const [inQueue, setInQueue] = useState(false);
   const [queueStatus, setQueueStatus] = useState({
-    status: mockUserStatus?.status ?? "waiting",
-    position: mockUserStatus?.position ?? 0,
-    waitTime: mockUserStatus?.waitTime ?? "0 min",
+    status: "waiting",
+    position: 0,
+    waitTime: "0 min",
   });
   const [history, setHistory] = useState([]); // { date, serviceName, outcome }
   const [notifications, setNotifications] = useState([]); // strings
@@ -48,21 +60,43 @@ function App() {
   const estimateWait = (s) => `${getServiceQueueLen(s) * getServiceDuration(s)} min`;
 
   // JOIN queue (UI simulation)
-  const handleJoin = () => {
-    if (!selectedService) {
-      addNotification("Please select a service before joining.");
-      return;
+const handleJoin = async () => {
+  if (!selectedService) {
+    addNotification("Please select a service before joining.");
+    return;
+  }
+
+  try {
+    const response = await fetch("http://localhost:3000/api/queue/join", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        serviceId: selectedService.id,
+        guestName: "Guest User" // In a full app, this comes from the Login state
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      setInQueue(true);
+      // The backend now calculates the wait time and position!
+      setQueueStatus({ 
+        status: "waiting", 
+        position: data.position, 
+        waitTime: `${data.estimatedWaitMinutes} min` 
+      });
+
+      addNotification(`Joined ${selectedService.name}. Ticket: ${data.ticket}`);
+      setUserScreen("status");
+    } else {
+      addNotification(`Error: ${data.error}`);
     }
-
-    const wait = estimateWait(selectedService);
-    const pos = getServiceQueueLen(selectedService) + 1;
-
-    setInQueue(true);
-    setQueueStatus({ status: "waiting", position: pos, waitTime: wait });
-
-    addNotification(`Joined ${selectedService.name}. Est. wait: ${wait}`);
-    setUserScreen("status");
-  };
+  } catch (err) {
+    console.error("Failed to join queue:", err);
+    addNotification("Network error. Is the backend running?");
+  }
+};
 
   // LEAVE queue (UI simulation)
   const handleLeave = (outcome = "left") => {
@@ -122,10 +156,13 @@ function App() {
   // -----------------------
   // Auth screens
   // -----------------------
-  if (screen === "login") {
+if (screen === "login") {
     return (
       <Login
-        onLogin={() => setScreen("app")}
+        onLogin={(email, role) => {
+          setView(role); // Sets view to 'admin' or 'user' based on backend response
+          setScreen("app");
+        }}
         goRegister={() => setScreen("register")}
       />
     );
