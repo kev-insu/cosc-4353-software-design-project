@@ -33,13 +33,7 @@ let users = [
    STEP 4: WAIT-TIME ESTIMATION LOGIC (The Math)
    Formula: Estimated Wait = Position * Expected Duration
 ══════════════════════════════════════════════════════════ */
-function estimateWaitTime(serviceId, position) {
-  const service = services.find(s => s.id === parseInt(serviceId));
-  if (!service) return 0;
-  
-  // Rule-based estimation required by A3 rubric
-  return position * service.duration;
-}
+
 
 /* ══════════════════════════════════════════════════════════
    STEP 3: REST API ENDPOINTS
@@ -49,21 +43,69 @@ function estimateWaitTime(serviceId, position) {
 app.post('/api/auth/login', (req, res) => {
   const { email, password } = req.body;
 
-  // Backend Validation
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required." });
   }
 
-  // Check if it's our hardcoded admin
+  if (typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ error: "Email and password must be strings." });
+  }
+
+  if (email.length < 5 || email.length > 100) {
+    return res.status(400).json({ error: "Email must be between 5 and 100 characters." });
+  }
+
+  if (password.length < 6 || password.length > 50) {
+    return res.status(400).json({ error: "Password must be between 6 and 50 characters." });
+  }
+
   const user = users.find(u => u.email === email && u.password === password);
-  
+
   if (user) {
     return res.json({ success: true, role: user.role, email: user.email });
   }
 
-  // For Assignment 3, if it's not the admin, we'll treat them as a standard user
-  // (In a real app, we'd check if they exist in a DB first)
-  return res.json({ success: true, role: "user", email: email });
+  return res.status(401).json({ error: "Invalid email or password." });
+});
+
+app.post('/api/auth/register', (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required." });
+  }
+
+  if (typeof email !== "string" || typeof password !== "string") {
+    return res.status(400).json({ error: "Email and password must be strings." });
+  }
+
+  if (email.length < 5 || email.length > 100) {
+    return res.status(400).json({ error: "Email must be between 5 and 100 characters." });
+  }
+
+  if (password.length < 6 || password.length > 50) {
+    return res.status(400).json({ error: "Password must be between 6 and 50 characters." });
+  }
+
+  const existingUser = users.find(u => u.email === email);
+  if (existingUser) {
+    return res.status(400).json({ error: "User already exists." });
+  }
+
+  const newUser = {
+    email,
+    password,
+    role: "user"
+  };
+
+  users.push(newUser);
+
+  return res.status(201).json({
+    success: true,
+    message: "User registered successfully.",
+    role: newUser.role,
+    email: newUser.email
+  });
 });
 
 // 1. GET ALL SERVICES (Front-end will call this to populate the Dashboard)
@@ -75,24 +117,33 @@ app.get('/api/services', (req, res) => {
 app.post('/api/queue/join', (req, res) => {
   const { serviceId, guestName } = req.body;
 
-  // Backend Validation (Required by A3)
   if (!serviceId || !guestName) {
     return res.status(400).json({ error: "Service ID and Guest Name are required." });
+  }
+
+  if (typeof guestName !== "string") {
+    return res.status(400).json({ error: "Guest Name must be a string." });
+  }
+
+  if (guestName.trim().length < 2 || guestName.trim().length > 50) {
+    return res.status(400).json({ error: "Guest Name must be between 2 and 50 characters." });
+  }
+
+  const service = services.find(s => s.id === parseInt(serviceId));
+  if (!service) {
+    return res.status(404).json({ error: "Service not found." });
   }
 
   if (!queues[serviceId]) {
     queues[serviceId] = [];
   }
 
-  // Calculate position
   const position = queues[serviceId].length + 1;
-  
-  // Step 4 integration: Calculate wait time
-  const waitTime = estimateWaitTime(serviceId, position);
+  const waitTime = estimateWaitTime(service, position);
 
   const newEntry = {
     id: Date.now(),
-    name: guestName,
+    name: guestName.trim(),
     ticket: `T-${ticketCounter++}`,
     status: "Waiting"
   };
@@ -101,8 +152,8 @@ app.post('/api/queue/join', (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: `Successfully joined queue.`,
-    position: position,
+    message: "Successfully joined queue.",
+    position,
     estimatedWaitMinutes: waitTime,
     ticket: newEntry.ticket
   });
