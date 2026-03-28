@@ -31,18 +31,44 @@ export default function Register({ onRegister, goLogin }) {
     return Object.keys(newErrors).length === 0;
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    if (validate()) {
-      onRegister(email); // mock register
+async function handleSubmit(e) {
+  e.preventDefault();
+
+  if (!validate()) return;
+
+  try {
+    const response = await fetch("http://localhost:3000/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setErrors({ server: data.error || "Registration failed." });
+      return;
     }
+
+    alert("Registration successful!");
+    goLogin();
+
+  } catch (err) {
+    setErrors({ server: "Server error. Please try again." });
   }
+}
 
   return (
     <div style={{ padding: 20 }}>
       <h2>Register</h2>
 
       <form onSubmit={handleSubmit}>
+        {errors.server && <p style={{ color: "red" }}>{errors.server}</p>}
         <div>
           <input
             type="email"
