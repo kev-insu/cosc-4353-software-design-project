@@ -1,0 +1,25 @@
+Assignment 3: Back-End Development & API Implementation
+Project: QueueSmart (TableLine)
+
+1. GitHub Repository Link
+URL: https://github.com/kev-insu/cosc-4353-software-design-project
+(Note: The queuesmart-backend folder contains the Express API and Jest unit tests.)
+
+2. Backend Technologies
+Language & Framework: JavaScript via Node.js and Express.js.
+
+Testing: Jest (for unit testing and coverage reports).
+
+Justification & Design Support: We chose Node.js and Express because their asynchronous, event-driven architecture is highly efficient at handling concurrent API requests, which is critical for a real-time queue management system where multiple users may be joining or checking status simultaneously. By keeping both our frontend (React) and backend (Node) in JavaScript, we ensured seamless data serialization and integration. For testing, Jest was selected because of its built-in coverage reporting and fast execution, allowing us to rigorously isolate and validate our mathematical wait-time estimation models and API validation logic without needing a persistent database.
+
+3. Unit Test Coverage
+
+![alt text](A3_Backend_Test_Coverage.png)
+
+We achieved 100% code coverage on our core business logic and wait-time estimation algorithms.
+
+Group Member Name,What is your contribution?,Discussion Notes
+Kevin Su, Lead Backend Developer. Built the Express.js API architecture, implemented the wait-time estimation math, and wrote Jest unit tests achieving 100% coverage., Managed the GitHub repository and ensured all backend endpoints handled data validation.
+Chan-Vu Nguyen, Authentication Integration. Updated the front-end Login and Registration modules to securely communicate with the new /api/auth/login endpoint., Ensured role-based routing (Admin vs. User) functioned correctly upon login.
+Ishita Uddarraju, Service Module Integration. Replaced static mock data by wiring the User Dashboard to perform GET requests from the live backend database., Maintained UI consistency while handling asynchronous data loading states.
+Huxley Taganahan, Queue Management Integration. Connected the front-end Queue Status and Join Queue screens to the live POST endpoints., Handled the dynamic rendering of the real-time wait estimates returned by the server.
