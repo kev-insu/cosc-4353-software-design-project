@@ -1,6 +1,7 @@
 // server.js
 const prisma = require('./db');
 const bcrypt = require('bcrypt');
+const { generateReport, toCsv } = require('./reportService');
 
 const { estimateWaitTime } = require('./queueLogic');
 const express = require('express');
@@ -51,6 +52,21 @@ function pushNotification(message, type = "info") {
   // Keep only the last 50 notifications
   if (notifications.length > 50) notifications.pop();
   return note;
+}
+
+function isAdministratorRole(role) {
+  return ["admin", "administrator"].includes(String(role || "").trim().toLowerCase());
+}
+
+function requireAdmin(req, res, next) {
+  const role = req.get("x-user-role");
+  if (!role) {
+    return res.status(401).json({ error: "Administrator access is required." });
+  }
+  if (!isAdministratorRole(role)) {
+    return res.status(403).json({ error: "Administrator access is required." });
+  }
+  return next();
 }
 
 /* ══════════════════════════════════════════════════════════
@@ -374,6 +390,75 @@ app.get('/api/history', (req, res) => {
 /* ══════════════════════════════════════════════════════════
    START SERVER
 ══════════════════════════════════════════════════════════ */
+// REPORTS (Admin)
+app.get('/api/reports/options', requireAdmin, async (req, res) => {
+  try {
+    const serviceRows = await prisma.service.findMany({
+      include: { queues: true },
+      orderBy: { name: "asc" },
+    });
+
+    const queuesForFilters = serviceRows.flatMap((service) =>
+      service.queues.map((queue) => ({
+        id: queue.id,
+        name: `Queue ${queue.id}`,
+        serviceId: service.id,
+        serviceName: service.name,
+        status: queue.status,
+      }))
+    );
+
+    const statusRows = await prisma.queueEntry.findMany({
+      distinct: ["status"],
+      select: { status: true },
+      orderBy: { status: "asc" },
+    });
+
+    return res.json({
+      success: true,
+      data: {
+        services: serviceRows.map((service) => ({ id: service.id, name: service.name })),
+        queues: queuesForFilters,
+        statuses: statusRows.map((row) => row.status),
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ error: "Error loading report filters." });
+  }
+});
+
+app.get('/api/reports/:reportType/export', requireAdmin, async (req, res) => {
+  try {
+    const report = await generateReport(prisma, req.params.reportType, req.query);
+    const fileDate = new Date().toISOString().slice(0, 10);
+
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${req.params.reportType}-${fileDate}.csv"`
+    );
+    return res.send(toCsv(report.columns, report.rows));
+  } catch (error) {
+    console.error(error);
+    return res.status(error.statusCode || 500).json({
+      error: error.message || "Error exporting report.",
+    });
+  }
+});
+
+app.get('/api/reports/:reportType', requireAdmin, async (req, res) => {
+  try {
+    const report = await generateReport(prisma, req.params.reportType, req.query);
+    return res.json({ success: true, reportType: req.params.reportType, ...report });
+  } catch (error) {
+    console.error(error);
+    return res.status(error.statusCode || 500).json({
+      error: error.message || "Error generating report.",
+    });
+  }
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
   console.log(`QueueSmart Backend running on http://localhost:${PORT}`);

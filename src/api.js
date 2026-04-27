@@ -174,3 +174,78 @@ export function getDisplayError(error, fallbackMessage) {
 export function isAbortError(error) {
   return error?.name === "AbortError";
 }
+
+function buildQuery(filters = {}) {
+  const params = new URLSearchParams();
+
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      params.set(key, String(value).trim());
+    }
+  });
+
+  const query = params.toString();
+  return query ? `?${query}` : "";
+}
+
+function adminHeaders(role) {
+  return { "X-User-Role": role || "user" };
+}
+
+export async function fetchReportOptions({ role, signal } = {}) {
+  const payload = await requestJson("/api/reports/options", {
+    method: "GET",
+    signal,
+    headers: adminHeaders(role),
+  });
+
+  if (!payload?.success || !payload.data) {
+    throw new ApiError("The report filter response was not in the expected format.", {
+      details: payload,
+    });
+  }
+
+  return payload.data;
+}
+
+export async function fetchReport({ reportType, filters, role, signal } = {}) {
+  const payload = await requestJson(`/api/reports/${reportType}${buildQuery(filters)}`, {
+    method: "GET",
+    signal,
+    headers: adminHeaders(role),
+  });
+
+  if (!payload?.success || !Array.isArray(payload.rows) || !Array.isArray(payload.columns)) {
+    throw new ApiError("The report response was not in the expected format.", {
+      details: payload,
+    });
+  }
+
+  return payload;
+}
+
+export async function exportReportCsv({ reportType, filters, role } = {}) {
+  const response = await fetch(buildUrl(`/api/reports/${reportType}/export${buildQuery(filters)}`), {
+    method: "GET",
+    headers: adminHeaders(role),
+  });
+
+  if (!response.ok) {
+    const payload = await parseJsonResponse(response);
+    throw new ApiError(getErrorMessage(payload, "Unable to export report."), {
+      status: response.status,
+      retryable: response.status >= 500,
+      details: payload,
+    });
+  }
+
+  const blob = await response.blob();
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `${reportType}-report.csv`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.URL.revokeObjectURL(url);
+}

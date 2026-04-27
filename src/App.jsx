@@ -17,6 +17,7 @@ function App() {
   const [view, setView] = useState("user");
   const [screen, setScreen] = useState("login");
   const [userScreen, setUserScreen] = useState("dashboard");
+  const [currentRole, setCurrentRole] = useState("user");
 
   const [services, setServices] = useState([]);
   const [servicesLoading, setServicesLoading] = useState(true);
@@ -37,6 +38,10 @@ function App() {
   const selectedService = useMemo(() => {
     return services.find((service) => String(service.id) === String(selectedServiceId)) || null;
   }, [services, selectedServiceId]);
+
+  const isAdministrator = useMemo(() => {
+    return ["admin", "administrator"].includes(String(currentRole || "").toLowerCase());
+  }, [currentRole]);
 
   const addNotification = (message) => {
     setNotifications((prev) => [message, ...prev]);
@@ -184,7 +189,8 @@ function App() {
     return (
       <Login
         onLogin={(email, role) => {
-          setView(role);
+          setCurrentRole(role);
+          setView(["admin", "administrator"].includes(String(role || "").toLowerCase()) ? "admin" : "user");
           setScreen("app");
         }}
         goRegister={() => setScreen("register")}
@@ -213,14 +219,17 @@ function App() {
         <h1 style={{ color: "#a855f7", margin: 0 }}>TableLine</h1>
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => setView(view === "user" ? "admin" : "user")}>
-            Switch to {view === "user" ? "Admin" : "User"} View
-          </button>
+          {isAdministrator && (
+            <button onClick={() => setView(view === "user" ? "admin" : "user")}>
+              Switch to {view === "user" ? "Admin" : "User"} View
+            </button>
+          )}
 
           <button
             onClick={() => {
               setScreen("login");
               setView("user");
+              setCurrentRole("user");
               setUserScreen("dashboard");
               setSelectedServiceId(null);
               setInQueue(false);
@@ -289,7 +298,13 @@ function App() {
         </section>
       ) : (
         <section className="admin-dashboard" style={{ marginTop: 16 }}>
-          <AdminService />
+          {isAdministrator ? (
+            <AdminService role={currentRole} />
+          ) : (
+            <div style={{ border: "1px solid #ef444466", padding: 20, borderRadius: 8 }}>
+              Administrator access is required.
+            </div>
+          )}
           <h3 style={{ marginTop: 18 }}>Active Queues</h3>
           {services.map((service) => (
             <p key={service.id}>

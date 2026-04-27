@@ -1,4 +1,5 @@
   import { useState, useEffect, useCallback } from "react";
+  import AdminReports from "./AdminReports";
 
 
   /* ══════════════════════════════════════════════════════════
@@ -616,13 +617,14 @@
     { id: "dashboard",     label: "Dashboard"      },
     { id: "services",      label: "Services"        },
     { id: "queue",         label: "Queue"           },
+    { id: "reports",       label: "Reports"         },
     { id: "notifications", label: "Notifications"   },
   ];
 
   /* ══════════════════════════════════════════════════════════
     ROOT
   ══════════════════════════════════════════════════════════ */
-  export default function App() {
+  export default function App({ role = "user" }) {
     const [screen, setScreen] = useState("dashboard");
     const [services, setServices] = useState(SEED_SERVICES);
     const [queues, setQueues]     = useState(SEED_QUEUES);
@@ -694,6 +696,7 @@
             {screen === "dashboard"     && <Dashboard      {...props} />}
             {screen === "services"      && <ServicesScreen  {...props} />}
             {screen === "queue"         && <QueueScreen     {...props} />}
+            {screen === "reports"       && <AdminReports role={role} />}
             {screen === "notifications" && <NotificationsScreen log={log} clearLog={clearLog} />}
           </div>
         </div>
