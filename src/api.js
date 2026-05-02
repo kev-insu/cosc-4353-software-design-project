@@ -156,10 +156,24 @@ export async function joinQueue({ serviceId, guestName, signal } = {}) {
     });
   }
 
+  const entry = payload.data && typeof payload.data === "object" ? payload.data : {};
+  const ticket =
+    typeof payload.ticket === "string"
+      ? payload.ticket
+      : typeof entry.ticket === "string"
+        ? entry.ticket
+        : "Pending";
+
   return {
-    ticket: typeof payload.ticket === "string" ? payload.ticket : "Pending",
-    position: toPositiveNumber(payload.position, 0),
-    estimatedWaitMinutes: toPositiveNumber(payload.estimatedWaitMinutes, 0),
+    ticket,
+    position: toPositiveNumber(
+      payload.position ?? entry.position,
+      0
+    ),
+    estimatedWaitMinutes: toPositiveNumber(
+      payload.estimatedWaitMinutes,
+      0
+    ),
   };
 }
 

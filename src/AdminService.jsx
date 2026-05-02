@@ -1,29 +1,33 @@
-  import { useState, useEffect, useCallback } from "react";
-  import AdminReports from "./AdminReports";
+import { useState, useEffect, useCallback } from "react";
+import AdminReports from "./AdminReports";
+import { API_BASE_URL } from "./api";
 
-
-  /* ══════════════════════════════════════════════════════════
-    SEED DATA
-  ══════════════════════════════════════════════════════════ */
-  const SEED_SERVICES = [
-    { id: 1, name: "Standard Seating",  description: "Regular indoor table seating.", duration: 15, priority: "medium", open: true  },
-    { id: 2, name: "Outdoor Patio",     description: "Al fresco dining on the patio deck.", duration: 20, priority: "low",    open: true  },
-    { id: 3, name: "Private Dining",    description: "Exclusive private room for special occasions.", duration: 45, priority: "high",   open: false },
-  ];
-
-  const SEED_QUEUES = {
-    1: [
-      { id: 101, name: "Maria Santos",     ticket: "A-001", joined: "6:02 PM", status: "Waiting" },
-      { id: 102, name: "James Okoye",      ticket: "A-002", joined: "6:15 PM", status: "Waiting" },
-      { id: 103, name: "Lin Wei",          ticket: "A-003", joined: "6:28 PM", status: "Waiting" },
-      { id: 104, name: "Fatima Al-Rashid", ticket: "A-004", joined: "6:41 PM", status: "Waiting" },
-    ],
-    2: [
-      { id: 201, name: "Carlos Mendez", ticket: "B-001", joined: "6:05 PM", status: "Waiting" },
-      { id: 202, name: "Priya Sharma",  ticket: "B-002", joined: "6:18 PM", status: "Waiting" },
-    ],
-    3: [],
+function mapServiceFromApi(row) {
+  if (!row) return null;
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description ?? "",
+    duration: row.duration,
+    priority: row.priority,
+    open: row.open !== false,
   };
+}
+
+function mapQueueGuest(row) {
+  const joined =
+    row.joined ||
+    (row.joinTime
+      ? new Date(row.joinTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "");
+  return {
+    id: row.id,
+    name: row.name || row.guestName,
+    ticket: row.ticket,
+    joined,
+    status: row.status,
+  };
+}
 
   /* ══════════════════════════════════════════════════════════
     NOTIFICATION HOOK
@@ -321,13 +325,28 @@
   /* ══════════════════════════════════════════════════════════
     SCREEN: DASHBOARD
   ══════════════════════════════════════════════════════════ */
-  function Dashboard({ services, queues, setServices, notify }) {
+  function Dashboard({ services, queues, notify, loadAll }) {
     const totalWaiting = Object.values(queues).flat().length;
     const openCount    = services.filter(s => s.open).length;
 
-    function toggle(svc) {
-      setServices(p => p.map(s => s.id === svc.id ? { ...s, open: !s.open } : s));
-      notify(`"${svc.name}" is now ${svc.open ? "closed" : "open"} for seating.`, svc.open ? "warn" : "success");
+    async function toggle(svc) {
+      const nextOpen = !svc.open;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/services/${svc.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ open: nextOpen }),
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Update failed");
+        await loadAll();
+        notify(
+          `"${svc.name}" is now ${nextOpen ? "open" : "closed"} for seating.`,
+          nextOpen ? "success" : "warn"
+        );
+      } catch (e) {
+        notify(String(e.message || e), "error");
+      }
     }
 
     return (
@@ -383,24 +402,58 @@
   /* ══════════════════════════════════════════════════════════
     SCREEN: SERVICE MANAGEMENT
   ══════════════════════════════════════════════════════════ */
-  function ServicesScreen({ services, setServices, notify }) {
+  function ServicesScreen({ services, notify, loadAll }) {
     const [modal, setModal] = useState(null);
 
-    function handleSave(data) {
-      if (modal === "new") {
-        setServices(p => [...p, { ...data, id: Date.now(), open: true }]);
-        notify(`"${data.name}" added to services.`, "success");
-      } else {
-        setServices(p => p.map(s => s.id === modal.id ? { ...s, ...data } : s));
-        notify(`"${data.name}" updated.`, "info");
+    async function handleSave(data) {
+      try {
+        if (modal === "new") {
+          const res = await fetch(`${API_BASE_URL}/api/services`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: data.name,
+              description: data.description,
+              duration: data.duration,
+              priority: data.priority,
+            }),
+          });
+          const j = await res.json();
+          if (!res.ok) throw new Error(j.error || "Create failed");
+          notify(`"${data.name}" added to services.`, "success");
+        } else {
+          const res = await fetch(`${API_BASE_URL}/api/services/${modal.id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: data.name,
+              description: data.description,
+              duration: data.duration,
+              priority: data.priority,
+            }),
+          });
+          const j = await res.json();
+          if (!res.ok) throw new Error(j.error || "Update failed");
+          notify(`"${data.name}" updated.`, "info");
+        }
+        setModal(null);
+        await loadAll();
+      } catch (e) {
+        notify(String(e.message || e), "error");
       }
-      setModal(null);
     }
 
-    function handleDelete(svc) {
+    async function handleDelete(svc) {
       if (!window.confirm(`Remove "${svc.name}"?`)) return;
-      setServices(p => p.filter(s => s.id !== svc.id));
-      notify(`"${svc.name}" removed.`, "warn");
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/services/${svc.id}`, { method: "DELETE" });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Delete failed");
+        notify(`"${svc.name}" removed.`, "warn");
+        await loadAll();
+      } catch (e) {
+        notify(String(e.message || e), "error");
+      }
     }
 
     return (
@@ -458,7 +511,7 @@
   /* ══════════════════════════════════════════════════════════
     SCREEN: QUEUE MANAGEMENT
   ══════════════════════════════════════════════════════════ */
-  function QueueScreen({ services, queues, setQueues, notify }) {
+  function QueueScreen({ services, queues, setQueues, notify, loadAll }) {
     const [selectedId, setSelectedId] = useState(services[0]?.id || null);
     const [dragIdx, setDragIdx] = useState(null);
     const [overIdx, setOverIdx] = useState(null);
@@ -466,36 +519,87 @@
     const svc   = services.find(s => s.id === selectedId);
     const queue = queues[selectedId] || [];
 
-    function serveNext() {
+    useEffect(() => {
+      if (!services.length) {
+        setSelectedId(null);
+        return;
+      }
+      if (selectedId == null || !services.some((s) => s.id === selectedId)) {
+        setSelectedId(services[0].id);
+      }
+    }, [services, selectedId]);
+
+    async function persistOrder(arr) {
+      const ids = arr.map((g) => g.id);
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/queue/${selectedId}/order`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ orderedEntryIds: ids }),
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Reorder failed");
+        notify("Queue order updated.", "info");
+        await loadAll();
+      } catch (e) {
+        notify(String(e.message || e), "error");
+        await loadAll();
+      }
+    }
+
+    async function serveNext() {
       if (!queue.length) { notify("No guests in this queue.", "warn"); return; }
-      const guest = queue[0];
-      setQueues(q => ({ ...q, [selectedId]: q[selectedId].slice(1) }));
-      notify(`Now seating: ${guest.name} (${guest.ticket})`, "success");
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/queue/serve`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ serviceId: selectedId }),
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Serve failed");
+        const g = j.servedGuest;
+        notify(`Now seating: ${g.name || g.guestName} (${g.ticket})`, "success");
+        await loadAll();
+      } catch (e) {
+        notify(String(e.message || e), "error");
+      }
     }
 
-    function remove(uid) {
+    async function remove(uid) {
       const guest = queue.find(x => x.id === uid);
-      setQueues(q => ({ ...q, [selectedId]: q[selectedId].filter(x => x.id !== uid) }));
-      notify(`${guest?.name || "Guest"} removed from queue.`, "warn");
+      if (!guest?.ticket) return;
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/queue/leave`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ serviceId: selectedId, ticket: guest.ticket }),
+        });
+        const j = await res.json();
+        if (!res.ok) throw new Error(j.error || "Remove failed");
+        notify(`${guest?.name || "Guest"} removed from queue.`, "warn");
+        await loadAll();
+      } catch (e) {
+        notify(String(e.message || e), "error");
+      }
     }
 
-    function move(idx, dir) {
+    async function move(idx, dir) {
       const arr = [...queue];
       const t = idx + dir;
       if (t < 0 || t >= arr.length) return;
       [arr[idx], arr[t]] = [arr[t], arr[idx]];
       setQueues(q => ({ ...q, [selectedId]: arr }));
-      notify("Queue order updated.", "info");
+      await persistOrder(arr);
     }
 
-    function onDrop(toIdx) {
+    async function onDrop(toIdx) {
       if (dragIdx === null || dragIdx === toIdx) { setDragIdx(null); setOverIdx(null); return; }
       const arr = [...queue];
       const [moved] = arr.splice(dragIdx, 1);
       arr.splice(toIdx, 0, moved);
       setQueues(q => ({ ...q, [selectedId]: arr }));
-      notify("Queue reordered.", "info");
       setDragIdx(null); setOverIdx(null);
+      await persistOrder(arr);
     }
 
     return (
@@ -626,27 +730,39 @@
   ══════════════════════════════════════════════════════════ */
   export default function App({ role = "user" }) {
     const [screen, setScreen] = useState("dashboard");
-    const [services, setServices] = useState(SEED_SERVICES);
-    const [queues, setQueues]     = useState(SEED_QUEUES);
+    const [services, setServices] = useState([]);
+    const [queues, setQueues]     = useState({});
     const { toasts, log, push: notify, dismiss, clearLog } = useNotifications();
 
-    // keep queue map in sync when services are added
-  useEffect(() => {
-    const fetchServices = async () => {
+    const loadAll = useCallback(async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/services');
+        const response = await fetch(`${API_BASE_URL}/api/services`);
         const result = await response.json();
-        if (result.success) {
-          setServices(result.data); // This fills the dropdown!
-        }
+        if (!result.success) throw new Error(result.error || "Failed to load services");
+
+        const mapped = result.data.map(mapServiceFromApi).filter(Boolean);
+        setServices(mapped);
+
+        const nextQueues = {};
+        await Promise.all(
+          mapped.map(async (s) => {
+            const qr = await fetch(`${API_BASE_URL}/api/queue/${s.id}`);
+            const qj = await qr.json();
+            nextQueues[s.id] =
+              qj.success && Array.isArray(qj.data) ? qj.data.map(mapQueueGuest) : [];
+          })
+        );
+        setQueues(nextQueues);
       } catch (error) {
         console.error("Error connecting to backend:", error);
       }
-    };
-    fetchServices();
-  }, []);
+    }, []);
 
-    const props = { services, setServices, queues, setQueues, notify };
+    useEffect(() => {
+      loadAll();
+    }, [loadAll]);
+
+    const props = { services, setServices, queues, setQueues, notify, loadAll };
 
     return (
       <>

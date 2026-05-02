@@ -32,9 +32,10 @@ model Service {
   id          Int      @id @default(autoincrement())
   name        String
   description String
-  duration    Int      
-  priority    String   @default("medium") 
-  queues      Queue[]  
+  duration    Int
+  priority    String   @default("medium")
+  open        Boolean  @default(true)
+  queues      Queue[]
 }
 
 // 4. Queue
@@ -59,10 +60,22 @@ model QueueEntry {
   queue     Queue    @relation(fields: [queueId], references: [id], onDelete: Cascade)
 }
 
-// 6. Notification / History
+// 6. History (audit trail)
 model History {
+  id          Int      @id @default(autoincrement())
+  message     String
+  timestamp   DateTime @default(now())
+  status      String   @default("sent") // sent / viewed
+  action      String?
+  guestName   String?
+  ticket      String?
+  serviceId   Int?
+  serviceName String?
+}
+
+model Notification {
   id        Int      @id @default(autoincrement())
   message   String
-  timestamp DateTime @default(now())
-  status    String   @default("sent") // sent / viewed
+  type      String   @default("info")
+  createdAt DateTime @default(now())
 }
