@@ -12,6 +12,15 @@ import UserDashboard from "./user/UserDashboard";
 import JoinQueue from "./user/JoinQueue";
 import QueueStatus from "./user/QueueStatus";
 import History from "./user/History";
+import { PURPLE, U } from "./user/tokens";
+import { UserTabBar } from "./user/UserChrome";
+
+const USER_TABS = [
+  { id: "dashboard", label: "Dashboard" },
+  { id: "join", label: "Join Queue" },
+  { id: "status", label: "Queue Status" },
+  { id: "history", label: "History" },
+];
 
 function App() {
   const [view, setView] = useState("user");
@@ -203,53 +212,96 @@ function App() {
   }
 
   return (
-    <div
-      className="app-container"
-      style={{ backgroundColor: "#000", minHeight: "100vh", color: "#fff", padding: "20px" }}
-    >
+    <div style={U.shell}>
+      <style>{`
+        .app-header-btn {
+          background: transparent;
+          color: #9ca3af;
+          border: 1px solid #2a2a2a;
+          border-radius: 8px;
+          padding: 8px 16px;
+          font-family: inherit;
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+        }
+        .app-header-btn:hover { border-color: ${PURPLE}; color: #e5e7eb; }
+        .app-header-btn--primary {
+          background: ${PURPLE};
+          color: #fff;
+          border: none;
+        }
+        .app-header-btn--primary:hover { opacity: 0.92; color: #fff; }
+      `}</style>
       <header
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderBottom: "1px solid #a855f7",
-          paddingBottom: "10px",
+          borderBottom: "1px solid #1a1a1a",
+          padding: "14px 20px",
+          position: "sticky",
+          top: 0,
+          background: "#000000ee",
+          backdropFilter: "blur(8px)",
+          zIndex: 100,
         }}
       >
-        <h1 style={{ color: "#a855f7", margin: 0 }}>TableLine</h1>
-
-        <div style={{ display: "flex", gap: 10 }}>
-          {isAdministrator && (
-            <button onClick={() => setView(view === "user" ? "admin" : "user")}>
-              Switch to {view === "user" ? "Admin" : "User"} View
-            </button>
-          )}
-
-          <button
-            onClick={() => {
-              setScreen("login");
-              setView("user");
-              setCurrentRole("user");
-              setUserScreen("dashboard");
-              setSelectedServiceId(null);
-              setInQueue(false);
-              setQueueStatus({ status: "not in queue", position: 0, waitTime: "0 min" });
+        <div
+          style={{
+            maxWidth: 720,
+            margin: "0 auto",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
+          <h1
+            style={{
+              margin: 0,
+              fontSize: 20,
+              fontWeight: 800,
+              color: PURPLE,
+              letterSpacing: "-0.02em",
             }}
           >
-            Logout
-          </button>
+            TableLine
+          </h1>
+
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            {isAdministrator && (
+              <button
+                type="button"
+                className="app-header-btn app-header-btn--primary"
+                onClick={() => setView(view === "user" ? "admin" : "user")}
+              >
+                {view === "user" ? "Admin view" : "User view"}
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="app-header-btn"
+              onClick={() => {
+                setScreen("login");
+                setView("user");
+                setCurrentRole("user");
+                setUserScreen("dashboard");
+                setSelectedServiceId(null);
+                setInQueue(false);
+                setQueueStatus({ status: "not in queue", position: 0, waitTime: "0 min" });
+              }}
+            >
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
       {view === "user" ? (
-        <section style={{ marginTop: 16 }}>
-          <nav style={{ display: "flex", gap: 10, marginBottom: 16 }}>
-            <button onClick={() => setUserScreen("dashboard")}>Dashboard</button>
-            <button onClick={() => setUserScreen("join")}>Join Queue</button>
-            <button onClick={() => setUserScreen("status")}>Queue Status</button>
-            <button onClick={() => setUserScreen("history")}>History</button>
-          </nav>
+        <section style={U.inner}>
+          <UserTabBar tabs={USER_TABS} activeId={userScreen} onSelect={setUserScreen} />
 
+          <div style={{ paddingTop: 20 }}>
           {userScreen === "dashboard" && (
             <UserDashboard
               services={services}
@@ -295,9 +347,10 @@ function App() {
           )}
 
           {userScreen === "history" && <History history={history} />}
+          </div>
         </section>
       ) : (
-        <section className="admin-dashboard" style={{ marginTop: 16 }}>
+        <section className="admin-dashboard" style={{ ...U.inner, paddingTop: 16 }}>
           {isAdministrator ? (
             <AdminService role={currentRole} />
           ) : (

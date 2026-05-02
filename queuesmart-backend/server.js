@@ -242,11 +242,19 @@ app.post("/api/services", async (req, res) => {
 
   const { name, description, duration, priority } = req.body;
   const prio = priority !== undefined && priority !== null ? String(priority) : "medium";
+  const trimmedName = String(name).trim();
 
   try {
+    const nameTaken = await prisma.service.findFirst({
+      where: { name: trimmedName },
+    });
+    if (nameTaken) {
+      return res.status(400).json({ error: "A service with this name already exists." });
+    }
+
     const newService = await prisma.service.create({
       data: {
-        name: String(name).trim(),
+        name: trimmedName,
         description: String(description).trim(),
         duration: parseInt(duration, 10),
         priority: VALID_PRIORITIES.has(prio) ? prio : "medium",
@@ -279,6 +287,13 @@ app.put("/api/services/:id", async (req, res) => {
     }
     if (String(name).trim().length > 100) {
       return res.status(400).json({ error: "Service name must be 100 characters or fewer." });
+    }
+    const nextName = String(name).trim();
+    const nameClash = await prisma.service.findFirst({
+      where: { name: nextName, NOT: { id } },
+    });
+    if (nameClash) {
+      return res.status(400).json({ error: "A service with this name already exists." });
     }
   }
 
