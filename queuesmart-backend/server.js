@@ -190,7 +190,7 @@ app.post("/api/auth/login", async (req, res) => {
     if (!isMatch) return res.status(401).json({ error: "Invalid credentials." });
 
     res.json({ success: true, role: user.role, email: user.email });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Login failed." });
   }
 });
@@ -231,8 +231,59 @@ app.get("/api/services", async (req, res) => {
   try {
     const data = await servicesWithQueueCounts();
     res.json({ success: true, data });
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: "Error fetching services" });
+  }
+});
+
+/* SMART FEATURE: Alternative Service Recommendations
+   Suggests services with shorter wait times when user wants to join a queue.
+   Returns top 3 alternatives ranked by estimated wait time (shortest first).
+*/
+app.get("/api/services/:serviceId/alternatives", async (req, res) => {
+  try {
+    const serviceId = parseInt(req.params.serviceId, 10);
+    if (Number.isNaN(serviceId)) {
+      return res.status(400).json({ error: "Invalid service ID." });
+    }
+
+    const selectedService = await prisma.service.findUnique({ where: { id: serviceId } });
+    if (!selectedService) {
+      return res.status(404).json({ error: "Service not found." });
+    }
+
+    // Get all services with queue counts
+    const allServices = await servicesWithQueueCounts();
+
+    // Calculate estimated wait time for each service
+    const servicesWithWaitTimes = allServices.map((svc) => {
+      const waitMinutes = estimateWaitTime(svc, svc.currentQueue);
+      return {
+        ...svc,
+        estimatedWaitMinutes: waitMinutes,
+      };
+    });
+
+    // Get the selected service's wait time
+    const selectedWaitTime = servicesWithWaitTimes.find((s) => s.id === serviceId)?.estimatedWaitMinutes || 0;
+
+    // Filter: open services with shorter wait times (excluding the selected service itself)
+    const betterAlternatives = servicesWithWaitTimes.filter(
+      (svc) => svc.open && svc.id !== serviceId && svc.estimatedWaitMinutes < selectedWaitTime
+    );
+
+    // Sort by wait time (ascending) and return top 3
+    const topAlternatives = betterAlternatives.sort((a, b) => a.estimatedWaitMinutes - b.estimatedWaitMinutes).slice(0, 3);
+
+    res.json({
+      success: true,
+      currentServiceWaitTime: selectedWaitTime,
+      alternatives: topAlternatives,
+      hasShortWaitAlternatives: topAlternatives.length > 0,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error fetching alternative services" });
   }
 });
 

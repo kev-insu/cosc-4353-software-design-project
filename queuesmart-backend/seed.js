@@ -75,7 +75,7 @@ async function seedDemoQueueAndHistory() {
 
   const rows = await prisma.service.findMany({
     orderBy: { id: "asc" },
-    take: 2,
+    take: 3,
     include: { queues: { orderBy: { id: "asc" }, take: 1 } },
   });
 
@@ -83,9 +83,11 @@ async function seedDemoQueueAndHistory() {
 
   const first = rows[0];
   const second = rows[1] || rows[0];
+  const third = rows[2] || rows[0];
   const q1 = first.queues[0];
   const q2 = second.queues[0];
-  if (!q1 || !q2) return;
+  const q3 = third.queues[0];
+  if (!q1 || !q2 || !q3) return;
 
   await prisma.queueEntry.createMany({
     data: [
@@ -106,8 +108,8 @@ async function seedDemoQueueAndHistory() {
       {
         guestName: "Priya Sharma",
         ticket: "QS-DEMO-003",
-        position: 2,
-        queueId: q2.id,
+        position: 1,
+        queueId: q3.id,
         status: "waiting",
       },
       {
@@ -150,6 +152,14 @@ async function seedDemoQueueAndHistory() {
         serviceId: second.id,
         serviceName: second.name,
       },
+      {
+        message: `[seed] ${third.name}: guests in line`,
+        action: "joined",
+        guestName: "Priya Sharma",
+        ticket: "QS-DEMO-003",
+        serviceId: third.id,
+        serviceName: third.name,
+      },
     ],
   });
 
@@ -181,7 +191,34 @@ async function main() {
       role: "admin",
     },
   });
-  console.log("Admin user ensured.");
+  await prisma.userCredentials.upsert({
+    where: { email: "user1@gyukaku.com" },
+    update: {},
+    create: {
+      email: "user1@gyukaku.com",
+      password: hashed,
+      role: "user",
+    },
+  });
+  await prisma.userCredentials.upsert({
+    where: { email: "user2@gyukaku.com" },
+    update: {},
+    create: {
+      email: "user2@gyukaku.com",
+      password: hashed,
+      role: "user",
+    },
+  });
+  await prisma.userCredentials.upsert({
+    where: { email: "guest@gyukaku.com" },
+    update: {},
+    create: {
+      email: "guest@gyukaku.com",
+      password: hashed,
+      role: "user",
+    },
+  });
+  console.log("Default users ensured.");
 
   await dedupeServicesByName();
 
@@ -205,6 +242,14 @@ async function main() {
     name: "Outdoor Patio",
     description: "Al fresco dining on the patio deck.",
     duration: 20,
+    priority: "low",
+    open: true,
+  });
+
+  await ensureService({
+    name: "Bar Seating",
+    description: "Quick seating at the bar for small parties and drinks.",
+    duration: 10,
     priority: "low",
     open: true,
   });
