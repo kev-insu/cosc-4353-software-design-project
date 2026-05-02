@@ -1,8 +1,9 @@
 // src/App.jsx
-import { useMemo, useState, useEffect } from "react";
+import { useCallback, useMemo, useState, useEffect } from "react";
 
 import AdminService from "./AdminService";
 import "./App.css";
+import { fetchServices, getDisplayError, isAbortError, joinQueue } from "./api";
 import Login from "./Login";
 import Register from "./Register";
 
@@ -13,92 +14,122 @@ import QueueStatus from "./user/QueueStatus";
 import History from "./user/History";
 
 function App() {
-  const [view, setView] = useState("user"); // 'user' or 'admin'
-  const [screen, setScreen] = useState("login"); // login | register | app
-
-  // Mini navigation for user screens
-  const [userScreen, setUserScreen] = useState("dashboard"); // dashboard | join | status | history
+  const [view, setView] = useState("user");
+  const [screen, setScreen] = useState("login");
+  const [userScreen, setUserScreen] = useState("dashboard");
+  const [currentRole, setCurrentRole] = useState("user");
 
   const [services, setServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(true);
+  const [servicesError, setServicesError] = useState("");
+  const [servicesLoadedOnce, setServicesLoadedOnce] = useState(false);
+  const [joinQueuePending, setJoinQueuePending] = useState(false);
 
-// This hooks up to your GET /api/services endpoint
-useEffect(() => {
-  fetch("http://localhost:3000/api/services")
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
-        setServices(data.data);
-      }
-    })
-    .catch((err) => console.error("Error fetching services:", err));
-}, []);
-
-  // Shared user "mock backend" state
   const [selectedServiceId, setSelectedServiceId] = useState(null);
   const [inQueue, setInQueue] = useState(false);
   const [queueStatus, setQueueStatus] = useState({
-    status: "waiting",
+    status: "not in queue",
     position: 0,
     waitTime: "0 min",
   });
-  const [history, setHistory] = useState([]); // { date, serviceName, outcome }
-  const [notifications, setNotifications] = useState([]); // strings
+  const [history, setHistory] = useState([]);
+  const [notifications, setNotifications] = useState([]);
 
   const selectedService = useMemo(() => {
-    return services.find((s) => String(s.id) === String(selectedServiceId)) || null;
+    return services.find((service) => String(service.id) === String(selectedServiceId)) || null;
   }, [services, selectedServiceId]);
 
-  const addNotification = (msg) => setNotifications((prev) => [msg, ...prev]);
+  const isAdministrator = useMemo(() => {
+    return ["admin", "administrator"].includes(String(currentRole || "").toLowerCase());
+  }, [currentRole]);
 
-  // Try to compute wait time using whatever fields exist (fallbacks included)
-  const getServiceDuration = (s) =>
-    Number(s?.expectedDuration ?? s?.duration ?? s?.minutes ?? 15) || 15;
+  const addNotification = (message) => {
+    setNotifications((prev) => [message, ...prev]);
+  };
 
-  const getServiceQueueLen = (s) =>
-    Number(s?.currentQueue ?? s?.queueLength ?? s?.queue ?? 0) || 0;
+  const loadServices = useCallback(async ({ keepExisting = false, signal } = {}) => {
+    setServicesLoading(true);
+    setServicesError("");
 
-  const estimateWait = (s) => `${getServiceQueueLen(s) * getServiceDuration(s)} min`;
+    try {
+      const nextServices = await fetchServices({ signal });
+      setServices(nextServices);
+      setServicesLoadedOnce(true);
+      return nextServices;
+    } catch (error) {
+      if (isAbortError(error)) {
+        return null;
+      }
 
-  // JOIN queue (UI simulation)
-const handleJoin = async () => {
-  if (!selectedService) {
-    addNotification("Please select a service before joining.");
-    return;
-  }
+      console.error("Error fetching services:", error);
 
-  try {
-    const response = await fetch("http://localhost:3000/api/queue/join", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      if (!keepExisting) {
+        setServices([]);
+      }
+
+      setServicesError(
+        getDisplayError(error, "Unable to load services right now. Please try again.")
+      );
+      return null;
+    } finally {
+      setServicesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    loadServices({ signal: controller.signal });
+
+    return () => {
+      controller.abort();
+    };
+  }, [loadServices]);
+
+  const getServiceDuration = (service) =>
+    Number(service?.expectedDuration ?? service?.duration ?? service?.minutes ?? 15) || 15;
+
+  const getServiceQueueLen = (service) =>
+    Number(service?.currentQueue ?? service?.queueLength ?? service?.queue ?? 0) || 0;
+
+  const estimateWait = (service) => `${getServiceQueueLen(service) * getServiceDuration(service)} min`;
+
+  const handleJoin = async () => {
+    if (!selectedService) {
+      addNotification("Please select a service before joining.");
+      return;
+    }
+
+    if (!selectedService.open) {
+      addNotification(`${selectedService.name} is currently unavailable.`);
+      return;
+    }
+
+    setJoinQueuePending(true);
+
+    try {
+      const data = await joinQueue({
         serviceId: selectedService.id,
-        guestName: "Guest User" // In a full app, this comes from the Login state
-      }),
-    });
+        guestName: "Guest User",
+      });
 
-    const data = await response.json();
-
-    if (data.success) {
       setInQueue(true);
-      // The backend now calculates the wait time and position!
-      setQueueStatus({ 
-        status: "waiting", 
-        position: data.position, 
-        waitTime: `${data.estimatedWaitMinutes} min` 
+      setQueueStatus({
+        status: "waiting",
+        position: data.position,
+        waitTime: `${data.estimatedWaitMinutes} min`,
       });
 
       addNotification(`Joined ${selectedService.name}. Ticket: ${data.ticket}`);
       setUserScreen("status");
-    } else {
-      addNotification(`Error: ${data.error}`);
+      await loadServices({ keepExisting: true });
+    } catch (error) {
+      console.error("Failed to join queue:", error);
+      addNotification(getDisplayError(error, "Network error. Is the backend running?"));
+    } finally {
+      setJoinQueuePending(false);
     }
-  } catch (err) {
-    console.error("Failed to join queue:", err);
-    addNotification("Network error. Is the backend running?");
-  }
-};
+  };
 
-  // LEAVE queue (UI simulation)
   const handleLeave = (outcome = "left") => {
     const serviceName = selectedService?.name ?? "Unknown Service";
 
@@ -122,7 +153,6 @@ const handleJoin = async () => {
     setUserScreen("dashboard");
   };
 
-  // Advance status simulation: waiting -> almost ready -> served
   const handleAdvanceStatus = () => {
     if (!selectedService || !inQueue) {
       addNotification("You are not currently in a queue.");
@@ -138,12 +168,14 @@ const handleJoin = async () => {
 
       addNotification(`Status update (${selectedService.name}): ${next}`);
 
-      // When served, record history + end queue session
       if (next === "served") {
-        // End queue and record history
-        setHistory((h) => [
-          { date: new Date().toLocaleString(), serviceName: selectedService.name, outcome: "served" },
-          ...h,
+        setHistory((entries) => [
+          {
+            date: new Date().toLocaleString(),
+            serviceName: selectedService.name,
+            outcome: "served",
+          },
+          ...entries,
         ]);
         setInQueue(false);
         return { status: "served", position: 0, waitTime: "0 min" };
@@ -153,14 +185,12 @@ const handleJoin = async () => {
     });
   };
 
-  // -----------------------
-  // Auth screens
-  // -----------------------
-if (screen === "login") {
+  if (screen === "login") {
     return (
       <Login
         onLogin={(email, role) => {
-          setView(role); // Sets view to 'admin' or 'user' based on backend response
+          setCurrentRole(role);
+          setView(["admin", "administrator"].includes(String(role || "").toLowerCase()) ? "admin" : "user");
           setScreen("app");
         }}
         goRegister={() => setScreen("register")}
@@ -169,17 +199,9 @@ if (screen === "login") {
   }
 
   if (screen === "register") {
-    return (
-      <Register
-        onRegister={() => setScreen("app")}
-        goLogin={() => setScreen("login")}
-      />
-    );
+    return <Register onRegister={() => setScreen("app")} goLogin={() => setScreen("login")} />;
   }
 
-  // -----------------------
-  // Main app
-  // -----------------------
   return (
     <div
       className="app-container"
@@ -197,17 +219,21 @@ if (screen === "login") {
         <h1 style={{ color: "#a855f7", margin: 0 }}>TableLine</h1>
 
         <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => setView(view === "user" ? "admin" : "user")}>
-            Switch to {view === "user" ? "Admin" : "User"} View
-          </button>
+          {isAdministrator && (
+            <button onClick={() => setView(view === "user" ? "admin" : "user")}>
+              Switch to {view === "user" ? "Admin" : "User"} View
+            </button>
+          )}
 
           <button
             onClick={() => {
               setScreen("login");
               setView("user");
+              setCurrentRole("user");
               setUserScreen("dashboard");
               setSelectedServiceId(null);
               setInQueue(false);
+              setQueueStatus({ status: "not in queue", position: 0, waitTime: "0 min" });
             }}
           >
             Logout
@@ -217,7 +243,6 @@ if (screen === "login") {
 
       {view === "user" ? (
         <section style={{ marginTop: 16 }}>
-          {/* USER NAV */}
           <nav style={{ display: "flex", gap: 10, marginBottom: 16 }}>
             <button onClick={() => setUserScreen("dashboard")}>Dashboard</button>
             <button onClick={() => setUserScreen("join")}>Join Queue</button>
@@ -225,14 +250,17 @@ if (screen === "login") {
             <button onClick={() => setUserScreen("history")}>History</button>
           </nav>
 
-          {/* USER SCREENS */}
           {userScreen === "dashboard" && (
             <UserDashboard
               services={services}
+              servicesLoading={servicesLoading}
+              servicesError={servicesError}
+              servicesLoadedOnce={servicesLoadedOnce}
               inQueue={inQueue}
               selectedService={selectedService}
               queueStatus={queueStatus}
               notifications={notifications}
+              retryServices={() => loadServices({ keepExisting: services.length > 0 })}
               goJoin={() => setUserScreen("join")}
             />
           )}
@@ -240,6 +268,10 @@ if (screen === "login") {
           {userScreen === "join" && (
             <JoinQueue
               services={services}
+              servicesLoading={servicesLoading}
+              servicesError={servicesError}
+              joinPending={joinQueuePending}
+              retryServices={() => loadServices({ keepExisting: services.length > 0 })}
               selectedServiceId={selectedServiceId}
               setSelectedServiceId={setSelectedServiceId}
               selectedService={selectedService}
@@ -266,10 +298,18 @@ if (screen === "login") {
         </section>
       ) : (
         <section className="admin-dashboard" style={{ marginTop: 16 }}>
-          <AdminService />
+          {isAdministrator ? (
+            <AdminService role={currentRole} />
+          ) : (
+            <div style={{ border: "1px solid #ef444466", padding: 20, borderRadius: 8 }}>
+              Administrator access is required.
+            </div>
+          )}
           <h3 style={{ marginTop: 18 }}>Active Queues</h3>
-          {services.map((s) => (
-            <p key={s.id}>{s.name}: {s.currentQueue ?? 0} parties waiting</p>
+          {services.map((service) => (
+            <p key={service.id}>
+              {service.name}: {service.currentQueue ?? 0} parties waiting
+            </p>
           ))}
         </section>
       )}

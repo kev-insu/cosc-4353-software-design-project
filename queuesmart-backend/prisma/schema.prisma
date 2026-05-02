@@ -1,0 +1,68 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"  // Put this back!
+}
+
+// ... your models follow
+
+// 1. UserCredentials & 2. UserProfile (Embedded/Relational)
+model UserCredentials {
+  id       Int          @id @default(autoincrement())
+  email    String       @unique
+  password String       // Must be encrypted via bcrypt
+  role     String       @default("user") // User / Administrator
+  profile  UserProfile? 
+}
+
+model UserProfile {
+  id          Int             @id @default(autoincrement())
+  fullName    String
+  userId      Int             @unique
+  user        UserCredentials @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// 3. Service
+model Service {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String
+  duration    Int      
+  priority    String   @default("medium") 
+  queues      Queue[]  
+}
+
+// 4. Queue
+model Queue {
+  id        Int          @id @default(autoincrement())
+  status    String       @default("open") // open / closed
+  createdAt DateTime     @default(now())
+  serviceId Int
+  service   Service      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  entries   QueueEntry[] 
+}
+
+// 5. QueueEntry
+model QueueEntry {
+  id        Int      @id @default(autoincrement())
+  guestName String
+  ticket    String   @unique
+  position  Int
+  status    String   @default("waiting") // waiting / served / canceled
+  joinTime  DateTime @default(now())
+  queueId   Int
+  queue     Queue    @relation(fields: [queueId], references: [id], onDelete: Cascade)
+}
+
+// 6. Notification / History
+model History {
+  id        Int      @id @default(autoincrement())
+  message   String
+  timestamp DateTime @default(now())
+  status    String   @default("sent") // sent / viewed
+}

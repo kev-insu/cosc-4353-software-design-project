@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { API_BASE_URL } from "./api";
 
-export default function Register({ onRegister, goLogin }) {
+export default function Register({ goLogin }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -37,7 +38,7 @@ async function handleSubmit(e) {
   if (!validate()) return;
 
   try {
-    const response = await fetch("http://localhost:3000/api/auth/register", {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -58,7 +59,7 @@ async function handleSubmit(e) {
     alert("Registration successful!");
     goLogin();
 
-  } catch (err) {
+  } catch {
     setErrors({ server: "Server error. Please try again." });
   }
 }
